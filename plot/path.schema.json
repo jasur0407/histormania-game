@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://histormania.local/schemas/path.schema.json",
+  "title": "Path",
+  "description": "A single self-contained historical playthrough. See GAME_DESIGN.md for authoring rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "era", "character", "startingHearts", "maxHearts", "startNode", "heartsDepletedNode", "nodes"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Not used by the game — allowed so editors can point here for IntelliSense."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Stable snake_case identifier, unique across all paths."
+    },
+    "title": {
+      "type": "string",
+      "description": "Player-facing path title, e.g. 'The Exam Candidate'."
+    },
+    "era": {
+      "type": "string",
+      "description": "Free-text period/place label, e.g. 'Song Dynasty China, 1057'."
+    },
+    "cover": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Optional image key for the path's card art. The game loads game/assets/img/<pathId>/<cover>.(webp|jpg|png) and shows a flat placeholder if the file is missing."
+    },
+    "contentWarnings": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "character": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "archetype", "role"],
+      "properties": {
+        "name": { "type": "string" },
+        "archetype": {
+          "type": "string",
+          "enum": ["playful", "serious", "fearful", "neutral", "passionate", "ambitious", "hardworking"]
+        },
+        "role": {
+          "type": "string",
+          "description": "Social role/occupation, e.g. 'baker's son', 'exam candidate'."
+        },
+        "bio": {
+          "type": "string",
+          "description": "Optional 1-2 sentence flavor bio shown at path start."
+        },
+        "trueIdentity": {
+          "type": "string",
+          "description": "Author-facing only. If this path uses a hidden-identity twist (see GAME_DESIGN.md §5a), the historical figure the protagonist secretly is/becomes. Never shown to the player directly — only surfaced via a node's `revealedIdentity` at the twist ending. The player MUST NOT render this field."
+        }
+      }
+    },
+    "startingHearts": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Hearts at path start. Default convention: 5."
+    },
+    "maxHearts": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Cap hearts can be healed to via positive deltas. Not schema-enforced: startingHearts should be <= maxHearts."
+    },
+    "startNode": {
+      "type": "string",
+      "description": "Key into `nodes` where the path begins. Not schema-enforced: must exist in `nodes` and must not be an ending."
+    },
+    "heartsDepletedNode": {
+      "type": "string",
+      "description": "Key into `nodes` the engine routes to the instant hearts reach 0, overriding whatever `next` the triggering choice named. Not schema-enforced: must exist in `nodes`, must be `ending: true` with `endingType: \"death\"`. This node is reached structurally (via the hearts mechanism), never via a choice's `next` — validators must treat both `startNode` and `heartsDepletedNode` as reachability roots, or every path will wrongly report this node as unreachable."
+    },
+    "nodes": {
+      "type": "object",
+      "description": "Map of nodeId -> Node. Every `next` referenced by a choice must exist as a key here.",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z0-9_]+$",
+        "description": "Also avoid `__proto__`, `constructor`, `prototype` — not expressible here, enforced by the player's validator."
+      },
+      "additionalProperties": { "$ref": "#/$defs/node" }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "ending"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "1-4 short lines of narration for this beat."
+        },
+        "age": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 150,
+          "description": "Optional, display only: the character's age during this beat, shown in the HUD ('Age 12') and as 'Lived to' on the ending screen. Carries over to later nodes that don't set one. Not a game variable (see GAME_DESIGN.md §9)."
+        },
+        "image": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$",
+          "description": "Optional scene image key (game/assets/img/<pathId>/<image>.*). Carries over to later nodes that don't set one."
+        },
+        "title": {
+          "type": "string",
+          "description": "Short name of an ending for the endings gallery, e.g. 'Eaten by Ammit'. Only valid on ending nodes."
+        },
+        "ending": {
+          "type": "boolean",
+          "description": "True if this node has no choices and terminates the path. Required (not defaulted) so a bare node object can't validate ambiguously."
+        },
+        "endingType": {
+          "type": "string",
+          "enum": ["good", "neutral", "bad", "death"],
+          "description": "Required when ending is true; forbidden otherwise."
+        },
+        "twist": {
+          "type": "boolean",
+          "default": false,
+          "description": "True if this ending includes a hidden-identity reveal payoff (see GAME_DESIGN.md §5a). Only valid on ending nodes; use on at most one or two endings per path, sparingly across the whole path catalog."
+        },
+        "revealedIdentity": {
+          "type": "string",
+          "description": "Required when twist is true; forbidden otherwise. The reveal text/name shown to the player at this ending, e.g. 'You were Alexander Pope — and this time, you lived.' Shown only after the player taps past the ending text (see player.html) — never simultaneously with it."
+        },
+        "choices": {
+          "type": "array",
+          "description": "Exactly 2 choices. Required on non-ending nodes; forbidden on ending nodes.",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/choice" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["ending"], "properties": { "ending": { "const": true } } },
+          "then": { "required": ["endingType"], "not": { "required": ["choices"] } },
+          "else": {
+            "required": ["choices"],
+            "not": {
+              "anyOf": [
+                { "required": ["endingType"] },
+                { "required": ["twist"] },
+                { "required": ["revealedIdentity"] },
+                { "required": ["title"] }
+              ]
+            }
+          }
+        },
+        {
+          "if": { "required": ["twist"], "properties": { "twist": { "const": true } } },
+          "then": { "required": ["revealedIdentity"] }
+        }
+      ]
+    },
+    "choice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text", "next"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Choice id, unique within its node (commonly 'a' / 'b')."
+        },
+        "text": {
+          "type": "string",
+          "description": "2-6 word player-facing choice label. Must not telegraph safe/risky — see GAME_DESIGN.md §4."
+        },
+        "next": {
+          "type": "string",
+          "description": "Target nodeId. Not schema-enforced: must exist in `nodes`."
+        },
+        "consequence": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Optional one-line aftermath of THIS choice, rendered above the destination node's text when the player arrives via this edge (including when hearts-depletion redirects the arrival). Lives on the choice, not the node, because a reconverged-upon node has a different consequence per incoming edge. Never states a heart number — the meter moves silently per GAME_DESIGN.md §3."
+        },
+        "heartsDelta": {
+          "type": "integer",
+          "minimum": -3,
+          "maximum": 1,
+          "default": 0,
+          "description": "Most choices omit this (0). Negative = damage, rare small positive = relief. Not shown in narration text. Forbidden together with `fatal`."
+        },
+        "fatal": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, this choice routes to `next` (which must be an ending node with endingType \"death\") and skips all heart arithmetic entirely — the meter does not move. Mutually exclusive with `heartsDelta`. Use at most once per path, for a genuinely reckless/absurd option."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["fatal"], "properties": { "fatal": { "const": true } } },
+          "then": { "not": { "required": ["heartsDelta"] } }
+        }
+      ]
+    }
+  }
+}
