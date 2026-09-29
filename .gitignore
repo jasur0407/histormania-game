@@ -1,0 +1,6 @@
+dist/
+__pycache__/
+*.pyc
+
+# Third-party reference material
+plot/choice of life.html
