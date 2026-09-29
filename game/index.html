@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Live short lives in real history. Two choices at a time. Try not to die.">
+<title>Histormania</title>
+<link rel="preload" href="assets/fonts/nunito.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/alfa-slab-one.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-screen="title">
+
+<!-- Everything is laid out on a fixed 1280x720 stage that ui.js scales to fit the window. -->
+<div id="stage">
+
+  <!-- TITLE -->
+  <section class="screen" id="s-title">
+    <div class="title-bg" id="titleBg"></div>
+    <div class="title-inner">
+      <h1 class="logo" id="logo"><span class="logo-text">Histormania</span></h1>
+      <p class="tagline">One life. Two choices at a time. Real history. Try not to die.</p>
+      <div class="menu-buttons">
+        <button class="btn btn-primary" id="btnContinue" hidden>
+          <span>Continue</span><small id="continueInfo"></small>
+        </button>
+        <button class="btn btn-primary" id="btnPlay"><span>Play</span></button>
+        <button class="btn" id="btnSettings"><span>Settings</span></button>
+      </div>
+    </div>
+    <p class="footnote" id="buildInfo"></p>
+    <button class="icon-btn corner-btn" data-fullscreen title="Fullscreen (F)" aria-label="Fullscreen">&#x26F6;</button>
+  </section>
+
+  <!-- CHOOSE A LIFE -->
+  <section class="screen" id="s-lives">
+    <header class="topbar">
+      <button class="icon-btn" data-go="title" title="Back (Esc)" aria-label="Back">&larr;</button>
+      <h2>Choose a life</h2>
+      <button class="icon-btn" data-fullscreen title="Fullscreen (F)" aria-label="Fullscreen">&#x26F6;</button>
+    </header>
+    <div class="scroll">
+      <div class="lives-grid" id="livesGrid"></div>
+    </div>
+  </section>
+
+  <!-- PATH INTRO -->
+  <section class="screen" id="s-intro">
+    <header class="topbar">
+      <button class="icon-btn" data-go="lives" title="Back (Esc)" aria-label="Back">&larr;</button>
+      <h2>A new life</h2>
+      <button class="icon-btn" data-fullscreen title="Fullscreen (F)" aria-label="Fullscreen">&#x26F6;</button>
+    </header>
+    <div class="intro-body">
+      <div class="art art-cover" id="introArt"></div>
+      <div class="intro-side">
+        <div class="paper intro-card">
+          <h3 class="intro-title" id="introTitle"></h3>
+          <p class="intro-era" id="introEra"></p>
+          <p class="intro-who" id="introWho"></p>
+          <p class="intro-bio" id="introBio"></p>
+          <div class="intro-row">
+            <span class="chip" id="introArchetype"></span>
+            <span class="hearts-inline" id="introHearts"></span>
+          </div>
+          <p class="warnings" id="introWarnings"></p>
+        </div>
+        <div class="stack">
+          <button class="btn btn-primary" id="btnBegin"><span>Begin this life</span></button>
+          <button class="btn" id="btnGallery"><span id="galleryLabel">Endings</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section class="screen" id="s-play">
+    <header class="hud">
+      <button class="icon-btn" id="btnMenu" title="Menu (Esc)" aria-label="Menu">&#9776;</button>
+      <span class="hud-title" id="hudTitle"></span>
+      <div class="hud-age" id="hudAge"></div>
+      <div class="hearts" id="hudHearts" aria-label="Hearts"></div>
+      <button class="icon-btn" data-fullscreen title="Fullscreen (F)" aria-label="Fullscreen">&#x26F6;</button>
+    </header>
+    <div class="play-body">
+      <div class="play-art">
+        <div class="art art-scene" id="sceneArt"></div>
+      </div>
+
+      <div class="play-side">
+        <!-- a normal beat -->
+        <div class="paper beat" id="beatCard">
+          <p class="consequence" id="consequence"></p>
+          <div class="next-divider" id="nextDivider"><span>Next</span></div>
+          <div class="node-text" id="nodeText"></div>
+        </div>
+        <div class="choices" id="choices"></div>
+
+        <!-- an ending -->
+        <div class="paper ending" id="endCard" hidden>
+          <div class="end-banner" id="endBanner"></div>
+          <div class="end-scroll">
+            <p class="consequence" id="endConsequence"></p>
+            <p class="end-title" id="endTitle"></p>
+            <span class="chip chip-new" id="endNew" hidden>New ending!</span>
+            <div class="node-text" id="endText"></div>
+            <div class="reveal" id="reveal" hidden>
+              <button class="btn btn-small" id="btnReveal"><span>Wait&hellip; who were you?</span></button>
+              <p class="reveal-text" id="revealText" hidden></p>
+            </div>
+            <h4 class="stats-head">Statistics</h4>
+            <dl class="stats" id="endStats"></dl>
+          </div>
+        </div>
+        <div class="end-actions" id="endActions" hidden>
+          <button class="btn btn-primary wide" id="btnUndo"><span>Undo last choice</span><kbd>Backspace</kbd></button>
+          <button class="btn" id="btnAgain"><span>Live again</span><kbd>R</kbd></button>
+          <button class="btn" id="btnOtherLives"><span>Other lives</span><kbd>L</kbd></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENDINGS GALLERY -->
+  <section class="screen" id="s-gallery">
+    <header class="topbar">
+      <button class="icon-btn" data-go="intro" title="Back (Esc)" aria-label="Back">&larr;</button>
+      <h2>Endings</h2>
+      <button class="icon-btn" data-fullscreen title="Fullscreen (F)" aria-label="Fullscreen">&#x26F6;</button>
+    </header>
+    <div class="scroll">
+      <div class="gallery-wrap">
+        <p class="gallery-count" id="galleryCount"></p>
+        <ul class="gallery" id="galleryList"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- IN-GAME MENU -->
+  <div class="modal" id="m-menu" hidden>
+    <div class="modal-box paper">
+      <h3>Paused</h3>
+      <div class="stack">
+        <button class="btn btn-primary" data-close><span>Resume</span><kbd>Esc</kbd></button>
+        <button class="btn" id="btnRestart"><span>Restart this life</span></button>
+        <button class="btn" id="btnMenuSettings"><span>Settings</span></button>
+        <button class="btn" id="btnQuit"><span>Main menu</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="modal" id="m-settings" hidden>
+    <div class="modal-box paper">
+      <h3>Settings</h3>
+      <label class="toggle" id="rowSound"><span>Sound</span><input type="checkbox" id="setSound"><i></i></label>
+      <label class="toggle"><span>Large text</span><input type="checkbox" id="setLarge"><i></i></label>
+      <label class="toggle"><span>Fullscreen</span><input type="checkbox" id="setFullscreen"><i></i></label>
+      <p class="keys-help">
+        <kbd>1</kbd> <kbd>2</kbd> choose &nbsp;&middot;&nbsp; <kbd>Esc</kbd> menu &nbsp;&middot;&nbsp; <kbd>F</kbd> fullscreen
+      </p>
+      <div class="stack">
+        <button class="btn btn-danger" id="btnReset"><span>Reset all progress</span></button>
+        <button class="btn btn-primary" data-close><span>Done</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="flash" aria-hidden="true"></div>
+</div>
+
+<noscript><p class="noscript">Histormania needs JavaScript to run.</p></noscript>
+
+<script src="js/paths.generated.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
