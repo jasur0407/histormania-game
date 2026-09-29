@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Histormania — Path Player</title>
+<style>
+  :root{
+    --bg:#050506; --panel:#17171c; --panel2:#1d1d24; --line:#2c2c34;
+    --ink:#ece8db; --muted:#9a9689; --accent:#c9a24b;
+    --good:#4caf7d; --bad:#c65b4e; --neutral:#8b8c93; --death:#6f7077;
+    --err:#e0554a; --warn:#d8a13a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .chrome{
+    width:100%; box-sizing:border-box; max-width:960px; padding:.6rem 1rem;
+    display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;
+    font-family: -apple-system, system-ui, sans-serif; font-size:.78rem; color:var(--muted);
+    border-bottom:1px solid var(--line);
+  }
+  .chrome b{color:var(--ink); font-weight:600;}
+  .chrome .spacer{flex:1;}
+  .chrome button, .chrome label.fbtn{
+    font-family:inherit; font-size:.75rem; cursor:pointer; color:var(--ink);
+    background:var(--panel2); border:1px solid var(--line); border-radius:6px;
+    padding:.3rem .6rem;
+  }
+  .chrome button:disabled{opacity:.35; cursor:default;}
+  .chrome button:hover:not(:disabled){border-color:var(--accent);}
+  .badge{border-radius:999px; padding:.15rem .55rem; font-size:.72rem; cursor:pointer; border:1px solid transparent;}
+  .badge.err{background:rgba(224,85,74,.18); color:var(--err); border-color:rgba(224,85,74,.4);}
+  .badge.warn{background:rgba(216,161,58,.18); color:var(--warn); border-color:rgba(216,161,58,.4);}
+  .badge.ok{background:rgba(76,175,125,.18); color:var(--good); border-color:rgba(76,175,125,.4);}
+
+  .stage{flex:1; width:100%; display:flex; justify-content:center; padding:2rem 1rem 3rem;}
+
+  /* --- device frame: ONLY player-visible content goes in here --- */
+  .device{
+    width:100%; max-width:420px; min-height:640px; background:var(--panel);
+    border:1px solid var(--line); border-radius:28px; padding:1.6rem 1.4rem;
+    display:none; flex-direction:column; box-shadow:0 24px 70px rgba(0,0,0,.55);
+    position:relative;
+  }
+  body[data-screen="game"] .device{display:flex;}
+
+  .hud{display:flex; justify-content:space-between; align-items:baseline; font-size:.72rem; color:var(--muted); margin-bottom:1.1rem; font-family:-apple-system,system-ui,sans-serif; letter-spacing:.03em;}
+  .hearts{letter-spacing:.15rem; color:var(--accent); font-size:1.05rem;}
+  .hearts.pulse{animation:pulse .5s ease;}
+  @keyframes pulse{0%{transform:scale(1);}30%{transform:scale(1.25);}100%{transform:scale(1);}}
+
+  .scene{flex:1; overflow-y:auto; display:flex; flex-direction:column; justify-content:center; gap:.9rem; padding:.25rem 0;}
+  .consequence{font-style:italic; color:var(--muted); font-size:.85rem; border-left:2px solid var(--line); padding-left:.65rem; line-height:1.4;}
+  .node-text p{margin:0 0 .6rem; font-size:1.14rem; line-height:1.55;}
+  .node-text p:last-child{margin-bottom:0;}
+
+  .actions{display:grid; grid-template-columns:1fr 1fr; gap:.6rem; margin-top:1.1rem;}
+  .choice-btn{
+    all:unset; box-sizing:border-box; cursor:pointer; min-height:66px;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:.65rem .5rem; border:1px solid #3a3a44; border-radius:10px;
+    background:var(--panel2); font-size:.96rem; line-height:1.3;
+  }
+  .choice-btn:hover, .choice-btn:focus-visible{border-color:var(--accent);}
+  .choice-btn .dbg{display:block; font-family:monospace; font-size:.65rem; color:var(--muted); margin-top:.3rem;}
+
+  body.caps .node-text, body.caps .choice-btn, body.caps .consequence,
+  body.caps .ending-text, body.caps .reveal-text{
+    text-transform:uppercase; letter-spacing:.03em;
+  }
+
+  /* ending */
+  .ending-badge{display:inline-block; font-family:-apple-system,system-ui,sans-serif; font-size:.7rem; letter-spacing:.08em; text-transform:uppercase; padding:.2rem .6rem; border-radius:999px; margin-bottom:.9rem;}
+  .device[data-ending="good"] .ending-badge{background:rgba(76,175,125,.18); color:var(--good);}
+  .device[data-ending="neutral"] .ending-badge{background:rgba(139,140,147,.2); color:var(--neutral);}
+  .device[data-ending="bad"] .ending-badge{background:rgba(198,91,78,.18); color:var(--bad);}
+  .device[data-ending="death"] .ending-badge{background:rgba(111,112,119,.25); color:var(--death);}
+  .ending-text{font-size:1.1rem; line-height:1.55;}
+  .reveal-wrap{margin-top:1rem;}
+  .reveal-text{margin-top:.6rem; padding:.8rem .9rem; background:rgba(201,162,75,.1); border:1px solid rgba(201,162,75,.35); border-radius:10px; font-size:.98rem; line-height:1.5; color:var(--accent); display:none;}
+  .reveal-text.shown{display:block;}
+  .ending-footer{display:flex; gap:.6rem; margin-top:1.2rem;}
+  .ending-footer button, .continue-btn{
+    all:unset; cursor:pointer; box-sizing:border-box; flex:1; text-align:center;
+    padding:.6rem; border:1px solid var(--line); border-radius:8px; background:var(--panel2);
+    font-family:-apple-system,system-ui,sans-serif; font-size:.85rem;
+  }
+  .ending-footer button:hover, .continue-btn:hover{border-color:var(--accent);}
+
+  /* loader */
+  #loader{display:none; width:100%; max-width:420px; text-align:center; font-family:-apple-system,system-ui,sans-serif;}
+  body[data-screen="loader"] #loader{display:block;}
+  .dropzone{border:2px dashed var(--line); border-radius:16px; padding:2.4rem 1.2rem; color:var(--muted); margin-bottom:1rem;}
+  .dropzone.drag{border-color:var(--accent); color:var(--ink);}
+  .dropzone b{color:var(--ink);}
+  #loader input[type=file]{display:none;}
+  #loader .fbtn{display:inline-block; margin-top:.8rem; padding:.5rem 1rem; background:var(--panel2); border:1px solid var(--line); border-radius:8px; cursor:pointer;}
+  #loader details{margin-top:1.2rem; text-align:left; color:var(--muted); font-size:.82rem;}
+  #loader textarea{width:100%; height:120px; margin-top:.5rem; background:var(--panel2); color:var(--ink); border:1px solid var(--line); border-radius:8px; font-family:monospace; font-size:.8rem; padding:.5rem;}
+  #loader .parseErr{color:var(--err); font-size:.8rem; margin-top:.5rem; white-space:pre-wrap; text-align:left;}
+  #loader code{background:var(--panel2); padding:.1rem .35rem; border-radius:4px;}
+
+  /* report */
+  #report{display:none; width:100%; max-width:640px; font-family:-apple-system,system-ui,sans-serif; font-size:.85rem;}
+  body[data-screen="report"] #report{display:block;}
+  #report h2{font-family:Georgia,serif; font-size:1.3rem; margin:0 0 .3rem;}
+  #report .sub{color:var(--muted); margin-bottom:1.2rem;}
+  .entry{border:1px solid var(--line); border-radius:8px; padding:.6rem .8rem; margin-bottom:.5rem; display:flex; justify-content:space-between; gap:.6rem; align-items:flex-start;}
+  .entry.err{border-color:rgba(224,85,74,.4);}
+  .entry.warn{border-color:rgba(216,161,58,.4);}
+  .entry .code{font-family:monospace; color:var(--muted); font-size:.72rem;}
+  .entry .msg{flex:1;}
+  .entry button{all:unset; cursor:pointer; font-size:.72rem; color:var(--accent); border:1px solid var(--line); border-radius:6px; padding:.2rem .5rem; white-space:nowrap;}
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:.4rem .8rem; margin:1rem 0; color:var(--muted);}
+  .stats b{color:var(--ink);}
+  #report .actionsRow{display:flex; gap:.6rem; margin-top:1rem;}
+  #report .actionsRow button{all:unset; cursor:pointer; padding:.5rem 1rem; border:1px solid var(--line); border-radius:8px; background:var(--panel2); font-size:.82rem;}
+  #report .actionsRow button:hover{border-color:var(--accent);}
+</style>
+</head>
+<body data-screen="loader">
+
+<header class="chrome">
+  <b>Histormania Player</b>
+  <span id="sourceLabel"></span>
+  <span class="spacer"></span>
+  <span id="validBadge"></span>
+  <button id="btnStepBack" disabled title="Undo last choice (Backspace)">Step back</button>
+  <button id="btnRestart" disabled title="Restart this path (R)">Restart</button>
+  <button id="btnCaps" title="Toggle ALL-CAPS presentation">Aa / AA</button>
+  <button id="btnReload" title="Reload / load another path">Load…</button>
+</header>
+
+<main class="stage">
+
+  <section id="loader">
+    <div class="dropzone" id="dropzone">
+      Drop a path <b>.json</b> file here
+    </div>
+    <label class="fbtn" for="fileInput">Choose a file…</label>
+    <input type="file" id="fileInput" accept=".json,application/json">
+    <details>
+      <summary>Paste JSON instead</summary>
+      <textarea id="pasteBox" placeholder="Paste path JSON here, then press Enter in this box or click Load below."></textarea>
+      <div style="margin-top:.5rem;"><label class="fbtn" id="pasteLoadBtn">Load pasted JSON</label></div>
+    </details>
+    <details id="lastPathWrap" style="display:none;">
+      <summary>Reload last path</summary>
+      <div style="margin-top:.5rem;"><span id="lastPathName"></span> — <label class="fbtn" id="lastPathBtn">Load it</label></div>
+    </details>
+    <div id="loaderHint" style="margin-top:1.4rem; color:var(--muted); font-size:.78rem; line-height:1.5;">
+      Opened as a local file — automatic loading of a sibling JSON is blocked by the browser.
+      To auto-load <code>paths/varangian_guard.json</code> on open, serve this folder instead:
+      <br><code>python -m http.server 8000</code> then visit
+      <code>http://localhost:8000/player.html</code>.
+    </div>
+    <div class="parseErr" id="parseErr"></div>
+  </section>
+
+  <div class="device" id="device">
+    <div class="hud">
+      <span id="hudTitle"></span>
+      <span class="hearts" id="hearts"></span>
+    </div>
+    <div class="scene" id="scene">
+      <div class="consequence" id="consequence" style="display:none;"></div>
+      <div class="node-text" id="nodeText"></div>
+      <div class="ending-badge" id="endingBadge" style="display:none;"></div>
+      <div class="reveal-wrap" id="revealWrap" style="display:none;">
+        <button class="continue-btn" id="revealBtn">Continue…</button>
+        <div class="reveal-text" id="revealText"></div>
+      </div>
+    </div>
+    <div class="actions" id="actions"></div>
+    <div class="ending-footer" id="endingFooter" style="display:none;"></div>
+  </div>
+
+  <section id="report">
+    <h2 id="reportTitle"></h2>
+    <div class="sub" id="reportSub"></div>
+    <div class="stats" id="reportStats"></div>
+    <div id="errList"></div>
+    <div id="warnList"></div>
+    <div class="actionsRow" id="reportActions"></div>
+  </section>
+
+</main>
+
+<script type="application/json" id="embedded-path">
+</script>
+
+<!-- To make this file auto-play on a plain double-click with no local server,
+     uncomment the line below and create path.data.js next to this file with:
+       window.HISTORMANIA_PATH = { ...path json... };
+<script src="path.data.js"></script>
+-->
+
+<script>
+(function(){
+  "use strict";
+
+  var LS_PREFIX = "histormania.player.";
+  function lsGet(key){ try{ return localStorage.getItem(LS_PREFIX+key); }catch(e){ return null; } }
+  function lsSet(key,val){ try{ localStorage.setItem(LS_PREFIX+key, val); }catch(e){} }
+
+  function hasOwn(obj,key){ return obj != null && Object.prototype.hasOwnProperty.call(obj,key); }
+  var UNSAFE_KEYS = {"__proto__":1,"constructor":1,"prototype":1};
+
+  function clamp(n,lo,hi){ return Math.max(lo, Math.min(hi, n)); }
+  function wordCount(s){ return String(s||"").trim().split(/\s+/).filter(Boolean).length; }
+
+  // ---------------------------------------------------------------
+  // App state
+  // ---------------------------------------------------------------
+  var App = {
+    raw: null,
+    path: null,
+    sourceLabel: "",
+    report: { errors: [], warnings: [], stats: {} },
+    run: {
+      nodeId: null, hearts: 0, consequence: null, lastDelta: 0,
+      endingReason: null, history: [], revealShown: false
+    },
+    ui: { screen: "loader", caps: lsGet("caps") === "1" }
+  };
+
+  // ---------------------------------------------------------------
+  // Loading cascade
+  // ---------------------------------------------------------------
+  function stripBOM(text){ return text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text; }
+
+  function parseJSONWithContext(text){
+    try{
+      return { ok:true, data: JSON.parse(stripBOM(text)) };
+    }catch(e){
+      var msg = e.message || String(e);
+      var m = /position (\d+)/.exec(msg);
+      var context = "";
+      if (m) {
+        var pos = parseInt(m[1],10);
+        var before = text.slice(0, pos);
+        var line = before.split("\n").length;
+        var col = pos - before.lastIndexOf("\n");
+        var lineStart = text.lastIndexOf("\n", pos-1) + 1;
+        var lineEnd = text.indexOf("\n", pos);
+        if (lineEnd === -1) lineEnd = text.length;
+        var snippet = text.slice(lineStart, lineEnd);
+        var caret = new Array(Math.max(0,pos - lineStart) + 1).join(" ") + "^";
+        context = "Line " + line + ", column " + col + ":\n" + snippet + "\n" + caret;
+      }
+      return { ok:false, error: msg, context: context };
+    }
+  }
+
+  function tryEmbedded(){
+    var el = document.getElementById("embedded-path");
+    if (!el) return null;
+    var text = el.textContent.trim();
+    if (!text) return null;
+    var r = parseJSONWithContext(text);
+    return r.ok ? { data: r.data, label: "embedded" } : null;
+  }
+
+  function tryGlobal(){
+    if (window.HISTORMANIA_PATH && typeof window.HISTORMANIA_PATH === "object") {
+      return { data: window.HISTORMANIA_PATH, label: "path.data.js" };
+    }
+    return null;
+  }
+
+  function tryQueryParam(cb){
+    var params = new URLSearchParams(location.search);
+    var raw = params.get("path");
+    if (!raw) return cb(null);
+    var url;
+    try{ url = new URL(raw, location.href); }catch(e){ return cb(null); }
+    if (["http:","https:","file:"].indexOf(url.protocol) === -1) return cb(null);
+    if (url.protocol === "file:" && location.protocol === "file:") {
+      // fetch() cannot read file:// — nothing we can do here, fall through to loader.
+      return cb(null);
+    }
+    fetch(url.href, { cache: "no-store" }).then(function(r){
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    }).then(function(text){
+      var parsed = parseJSONWithContext(text);
+      cb(parsed.ok ? { data: parsed.data, label: url.pathname.split("/").pop() } : null);
+    }).catch(function(){ cb(null); });
+  }
+
+  function tryDefaultFetch(cb){
+    if (location.protocol === "file:") return cb(null); // never attempt — always fails, only adds console noise
+    fetch("paths/varangian_guard.json", { cache: "no-store" }).then(function(r){
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    }).then(function(text){
+      var parsed = parseJSONWithContext(text);
+      cb(parsed.ok ? { data: parsed.data, label: "paths/varangian_guard.json" } : null);
+    }).catch(function(){ cb(null); });
+  }
+
+  function initLoad(){
+    var found = tryEmbedded() || tryGlobal();
+    if (found) return onPathLoaded(found.data, found.label);
+    tryQueryParam(function(qp){
+      if (qp) return onPathLoaded(qp.data, qp.label);
+      tryDefaultFetch(function(fetched){
+        if (fetched) return onPathLoaded(fetched.data, fetched.label);
+        showLoader();
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Loader screen (file:// fallback)
+  // ---------------------------------------------------------------
+  function showLoader(){
+    App.ui.screen = "loader";
+    document.body.dataset.screen = "loader";
+    var last = lsGet("lastPathName");
+    var lastJson = lsGet("lastPathJson");
+    if (last && lastJson) {
+      document.getElementById("lastPathWrap").style.display = "block";
+      document.getElementById("lastPathName").textContent = last;
+    }
+  }
+
+  function handleFileText(text, label){
+    var parsed = parseJSONWithContext(text);
+    var errBox = document.getElementById("parseErr");
+    if (!parsed.ok) {
+      errBox.textContent = "Could not parse JSON: " + parsed.error + (parsed.context ? "\n\n" + parsed.context : "");
+      return;
+    }
+    errBox.textContent = "";
+    lsSet("lastPathName", label);
+    lsSet("lastPathJson", text);
+    onPathLoaded(parsed.data, label);
+  }
+
+  function wireLoader(){
+    var dz = document.getElementById("dropzone");
+    var fileInput = document.getElementById("fileInput");
+    dz.addEventListener("dragover", function(e){ e.preventDefault(); dz.classList.add("drag"); });
+    dz.addEventListener("dragleave", function(){ dz.classList.remove("drag"); });
+    dz.addEventListener("drop", function(e){
+      e.preventDefault();
+      dz.classList.remove("drag");
+      var f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (!f) return;
+      var reader = new FileReader();
+      reader.onload = function(){ handleFileText(String(reader.result), f.name); };
+      reader.readAsText(f);
+    });
+    fileInput.addEventListener("change", function(){
+      var f = fileInput.files && fileInput.files[0];
+      if (!f) return;
+      var reader = new FileReader();
+      reader.onload = function(){ handleFileText(String(reader.result), f.name); };
+      reader.readAsText(f);
+    });
+    document.getElementById("pasteLoadBtn").addEventListener("click", function(){
+      var text = document.getElementById("pasteBox").value;
+      if (text.trim()) handleFileText(text, "pasted JSON");
+    });
+    document.getElementById("lastPathBtn").addEventListener("click", function(){
+      var text = lsGet("lastPathJson");
+      var name = lsGet("lastPathName");
+      if (text) handleFileText(text, name || "last path");
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Validator
+  // ---------------------------------------------------------------
+  var ARCHETYPES = ["playful","serious","fearful","neutral","passionate","ambitious","hardworking"];
+  var ENDING_TYPES = ["good","neutral","bad","death"];
+  var ID_RE = /^[a-z0-9_]+$/;
+
+  function validate(raw){
+    var errors = [], warnings = [];
+    function err(code,message,where){ errors.push({code:code,severity:"error",message:message,where:where||{}}); }
+    function warn(code,message,where){ warnings.push({code:code,severity:"warning",message:message,where:where||{}}); }
+
+    if (!raw || typeof raw !== "object") { err("E000","Path is not a JSON object."); return {errors:errors,warnings:warnings,stats:{}}; }
+
+    ["id","title","era","character","startingHearts","maxHearts","startNode","heartsDepletedNode","nodes"].forEach(function(f){
+      if (!hasOwn(raw,f)) err("E002","Missing required top-level field '" + f + "'.");
+    });
+    if (raw.id != null && !ID_RE.test(raw.id)) err("E003","Path id '" + raw.id + "' must match ^[a-z0-9_]+$.");
+    if (raw.character) {
+      if (!ARCHETYPES.indexOf ? true : true) {}
+      if (raw.character.archetype && ARCHETYPES.indexOf(raw.character.archetype) === -1) {
+        err("E004","character.archetype '" + raw.character.archetype + "' is not one of: " + ARCHETYPES.join(", ") + ".");
+      }
+      if (!raw.character.name) err("E004b","character.name is required.");
+      if (!raw.character.role) err("E004c","character.role is required.");
+    }
+    ["startingHearts","maxHearts"].forEach(function(f){
+      var v = raw[f];
+      if (v != null && (!Number.isInteger(v) || v < 1 || v > 10)) err("E005","'" + f + "' must be an integer 1..10.");
+    });
+    if (Number.isInteger(raw.startingHearts) && Number.isInteger(raw.maxHearts) && raw.startingHearts > raw.maxHearts) {
+      err("E006","startingHearts (" + raw.startingHearts + ") exceeds maxHearts (" + raw.maxHearts + ").");
+    }
+
+    var nodes = (raw.nodes && typeof raw.nodes === "object") ? raw.nodes : null;
+    if (!nodes) { err("E011","'nodes' is missing or not an object."); return {errors:errors,warnings:warnings,stats:{}}; }
+    var nodeIds = Object.keys(nodes).filter(function(k){ return hasOwn(nodes,k); });
+    if (nodeIds.length === 0) err("E011","'nodes' is empty.");
+
+    nodeIds.forEach(function(id){
+      if (UNSAFE_KEYS[id]) err("E012","Node key '" + id + "' is an unsafe reserved word and must be renamed.", {nodeId:id});
+      else if (!ID_RE.test(id)) err("E012","Node key '" + id + "' must match ^[a-z0-9_]+$.", {nodeId:id});
+    });
+
+    if (raw.startNode != null && !hasOwn(nodes, raw.startNode)) err("E007","startNode '" + raw.startNode + "' is not a key in nodes.");
+    if (raw.heartsDepletedNode != null) {
+      if (!hasOwn(nodes, raw.heartsDepletedNode)) {
+        err("E009","heartsDepletedNode '" + raw.heartsDepletedNode + "' is not a key in nodes.");
+      } else {
+        var hn = nodes[raw.heartsDepletedNode];
+        if (!hn.ending || hn.endingType !== "death") {
+          err("E010","heartsDepletedNode '" + raw.heartsDepletedNode + "' must be an ending node with endingType \"death\".", {nodeId: raw.heartsDepletedNode});
+        }
+      }
+    }
+    if (raw.startNode != null && hasOwn(nodes, raw.startNode) && nodes[raw.startNode].ending) {
+      err("E008","startNode '" + raw.startNode + "' is an ending node — a path can't start already finished.", {nodeId: raw.startNode});
+    }
+
+    var fatalCount = 0;
+    var heartAffectingCount = 0;
+
+    nodeIds.forEach(function(id){
+      var node = nodes[id];
+      var where = {nodeId:id};
+      if (!node || typeof node !== "object") { err("E020","Node '" + id + "' is not an object.", where); return; }
+      if (typeof node.text !== "string" || !node.text.trim()) err("E020","Node '" + id + "' has missing/empty text.", where);
+
+      var isEnding = node.ending === true;
+      if (isEnding) {
+        if (!node.endingType || ENDING_TYPES.indexOf(node.endingType) === -1) {
+          err("E023","Ending node '" + id + "' has missing/invalid endingType.", where);
+        }
+        if (hasOwn(node,"choices")) err("E022","Ending node '" + id + "' must not have choices.", where);
+        if (node.twist === true && !node.revealedIdentity) {
+          err("E025","Node '" + id + "' has twist:true but no revealedIdentity.", where);
+        }
+        if (hasOwn(node,"revealedIdentity") && node.twist !== true) {
+          err("E026","Node '" + id + "' has revealedIdentity without twist:true.", where);
+        }
+      } else {
+        if (hasOwn(node,"endingType") || hasOwn(node,"twist") || hasOwn(node,"revealedIdentity")) {
+          err("E024","Non-ending node '" + id + "' must not carry endingType/twist/revealedIdentity.", where);
+        }
+        var choices = node.choices;
+        if (!Array.isArray(choices) || choices.length !== 2) {
+          err("E021","Non-ending node '" + id + "' must have exactly 2 choices (found " +
+            (Array.isArray(choices) ? choices.length : "none") + ").", where);
+        } else {
+          var seenIds = {};
+          choices.forEach(function(c, idx){
+            var cwhere = {nodeId:id, choiceId: c && c.id};
+            if (!c || typeof c !== "object") { err("E030","Choice #" + idx + " on '" + id + "' is not an object.", cwhere); return; }
+            if (!c.id || !c.text || !c.next) err("E030","Choice on '" + id + "' is missing id/text/next.", cwhere);
+            if (c.id) {
+              if (seenIds[c.id]) err("E032","Duplicate choice id '" + c.id + "' on node '" + id + "'.", cwhere);
+              seenIds[c.id] = true;
+            }
+            if (c.next != null && !hasOwn(nodes, c.next)) {
+              err("E031","Choice '" + id + "." + c.id + "' points to next '" + c.next + "', which doesn't exist.", cwhere);
+            }
+            if (hasOwn(c,"heartsDelta")) {
+              heartAffectingCount++;
+              if (!Number.isInteger(c.heartsDelta) || c.heartsDelta < -3 || c.heartsDelta > 1) {
+                err("E033","heartsDelta on '" + id + "." + c.id + "' must be an integer -3..1.", cwhere);
+              }
+            }
+            if (c.fatal === true) {
+              fatalCount++;
+              if (hasOwn(c,"heartsDelta")) err("E034","Choice '" + id + "." + c.id + "' has fatal:true and heartsDelta together.", cwhere);
+              if (c.next && hasOwn(nodes, c.next)) {
+                var tgt = nodes[c.next];
+                if (!tgt.ending || tgt.endingType !== "death") {
+                  err("E035","fatal choice '" + id + "." + c.id + "' must target a death ending (got '" + c.next + "').", cwhere);
+                }
+              }
+            }
+            if (c.next === id) warn("W013","Choice '" + id + "." + c.id + "' loops back to its own node.", cwhere);
+            if (c.text && (wordCount(c.text) < 2 || wordCount(c.text) > 6)) {
+              warn("W015","Choice text on '" + id + "." + c.id + "' is " + wordCount(c.text) + " words (guideline: 2-6).", cwhere);
+            }
+            if (c.consequence && c.consequence.length > 200) {
+              warn("W016","consequence on '" + id + "." + c.id + "' exceeds 200 chars.", cwhere);
+            }
+          });
+          if (choices.length === 2 && choices[0] && choices[1] && choices[0].text && choices[1].text) {
+            var wa = wordCount(choices[0].text), wb = wordCount(choices[1].text);
+            if (wa > 0 && wb > 0 && (wa / wb >= 2.5 || wb / wa >= 2.5)) {
+              warn("W008","Choices on '" + id + "' have very unbalanced length (" + wa + " vs " + wb + " words) — this can telegraph which is 'safer'. See GAME_DESIGN.md §4.", where);
+            }
+          }
+        }
+      }
+      if (node.text && node.text.length > 260) warn("W012","Node '" + id + "' text is long (" + node.text.length + " chars) — consider splitting into two nodes.", where);
+    });
+
+    if (fatalCount > 1) warn("W017","Path has " + fatalCount + " fatal choices — GAME_DESIGN.md §3 recommends at most 1 per path.");
+
+    // reachability: BFS rooted at startNode AND heartsDepletedNode (the latter is reached
+    // structurally via hearts hitting 0, never via a choice's `next`)
+    if (raw.startNode && raw.heartsDepletedNode) {
+      var seen = {};
+      var queue = [];
+      [raw.startNode, raw.heartsDepletedNode].forEach(function(id){
+        if (hasOwn(nodes,id) && !seen[id]) { seen[id]=true; queue.push(id); }
+      });
+      while (queue.length) {
+        var cur = queue.shift();
+        var n = nodes[cur];
+        if (n && Array.isArray(n.choices)) {
+          n.choices.forEach(function(c){
+            if (c && c.next && hasOwn(nodes,c.next) && !seen[c.next]) { seen[c.next]=true; queue.push(c.next); }
+          });
+        }
+      }
+      nodeIds.forEach(function(id){
+        if (!seen[id]) warn("W010","Node '" + id + "' is unreachable from startNode or heartsDepletedNode.", {nodeId:id});
+      });
+
+      // every node should have some path to an ending (no closed-loop softlock)
+      var endingIds = {};
+      nodeIds.forEach(function(id){ if (nodes[id] && nodes[id].ending) endingIds[id]=true; });
+      var canReachEnding = {};
+      var changed = true;
+      while (changed) {
+        changed = false;
+        nodeIds.forEach(function(id){
+          if (canReachEnding[id]) return;
+          var n = nodes[id];
+          if (!n) return;
+          if (n.ending) { canReachEnding[id]=true; changed=true; return; }
+          if (Array.isArray(n.choices) && n.choices.some(function(c){ return c && hasOwn(nodes,c.next) && canReachEnding[c.next]; })) {
+            canReachEnding[id]=true; changed=true;
+          }
+        });
+      }
+      nodeIds.forEach(function(id){
+        if (seen[id] && !canReachEnding[id]) err("E028","No ending is reachable from node '" + id + "' (dead end / closed loop).", {nodeId:id});
+      });
+    }
+
+    var endingCount = nodeIds.filter(function(id){ return nodes[id] && nodes[id].ending; }).length;
+    if (nodeIds.length < 12 || nodeIds.length > 25) warn("G01","Node count is " + nodeIds.length + " (guideline: 12-25).");
+    if (endingCount < 3 || endingCount > 6) warn("G02","Distinct endings: " + endingCount + " (guideline: 3-6).");
+    if (heartAffectingCount < 3 || heartAffectingCount > 8) warn("G03","Heart-affecting choices: " + heartAffectingCount + " (guideline: roughly 3-6 per playthrough).");
+
+    var stats = {
+      nodes: nodeIds.length,
+      endings: endingCount,
+      twistEndings: nodeIds.filter(function(id){ return nodes[id] && nodes[id].twist; }).length,
+      heartAffectingChoices: heartAffectingCount,
+      fatalChoices: fatalCount
+    };
+    return { errors: errors, warnings: warnings, stats: stats };
+  }
+
+  // ---------------------------------------------------------------
+  // Boot / report screen
+  // ---------------------------------------------------------------
+  function onPathLoaded(raw, label){
+    App.raw = raw;
+    App.sourceLabel = label;
+    document.getElementById("sourceLabel").textContent = label ? ("· " + label) : "";
+    App.report = validate(raw);
+    if (App.report.errors.length > 0) {
+      showReport();
+    } else {
+      startGame(raw);
+    }
+  }
+
+  function fmtEntry(e){
+    var loc = e.where && e.where.nodeId ? (e.where.nodeId + (e.where.choiceId ? "." + e.where.choiceId : "")) : "";
+    var div = document.createElement("div");
+    div.className = "entry " + e.severity.slice(0,4);
+    var codeSpan = document.createElement("span");
+    codeSpan.className = "code";
+    codeSpan.textContent = "[" + e.code + "]" + (loc ? " " + loc : "");
+    var msgSpan = document.createElement("span");
+    msgSpan.className = "msg";
+    msgSpan.textContent = e.message;
+    div.appendChild(codeSpan);
+    div.appendChild(msgSpan);
+    if (e.where && e.where.nodeId && App.raw && hasOwn(App.raw.nodes||{}, e.where.nodeId)) {
+      var btn = document.createElement("button");
+      btn.textContent = "Jump →";
+      btn.addEventListener("click", function(){ jumpToNode(e.where.nodeId); });
+      div.appendChild(btn);
+    }
+    return div;
+  }
+
+  function showReport(){
+    App.ui.screen = "report";
+    document.body.dataset.screen = "report";
+    var errs = App.report.errors, warns = App.report.warnings, stats = App.report.stats;
+    document.getElementById("reportTitle").textContent =
+      errs.length + " structural error" + (errs.length===1?"":"s") + " — path not playable";
+    document.getElementById("reportSub").textContent =
+      "Validated against path.schema.json's rules. Fix these in the JSON and reload.";
+    var statsEl = document.getElementById("reportStats");
+    statsEl.innerHTML = "";
+    Object.keys(stats).forEach(function(k){
+      var d = document.createElement("div");
+      var b = document.createElement("b"); b.textContent = stats[k];
+      d.appendChild(b);
+      d.appendChild(document.createTextNode(" " + k));
+      statsEl.appendChild(d);
+    });
+    var errList = document.getElementById("errList");
+    errList.innerHTML = "";
+    errs.forEach(function(e){ errList.appendChild(fmtEntry(e)); });
+    var warnList = document.getElementById("warnList");
+    warnList.innerHTML = "";
+    warns.forEach(function(e){ warnList.appendChild(fmtEntry(e)); });
+
+    var actions = document.getElementById("reportActions");
+    actions.innerHTML = "";
+    var playBtn = document.createElement("button");
+    playBtn.textContent = "Play anyway (from startNode)";
+    playBtn.addEventListener("click", function(){ startGame(App.raw); });
+    actions.appendChild(playBtn);
+    var loadBtn = document.createElement("button");
+    loadBtn.textContent = "Load a different file";
+    loadBtn.addEventListener("click", showLoader);
+    actions.appendChild(loadBtn);
+
+    updateValidBadge();
+  }
+
+  function jumpToNode(nodeId){
+    if (!App.path && App.raw) App.path = App.raw;
+    if (!App.path || !hasOwn(App.path.nodes, nodeId)) return;
+    App.ui.screen = "game";
+    document.body.dataset.screen = "game";
+    App.run.nodeId = nodeId;
+    App.run.consequence = null;
+    App.run.revealShown = false;
+    App.run.endingReason = null;
+    render();
+  }
+
+  // ---------------------------------------------------------------
+  // Game engine
+  // ---------------------------------------------------------------
+  function startGame(raw){
+    App.path = raw;
+    App.run = {
+      nodeId: raw.startNode,
+      hearts: clamp(raw.startingHearts, 0, raw.maxHearts),
+      consequence: null,
+      lastDelta: 0,
+      endingReason: null,
+      history: [],
+      revealShown: false
+    };
+    App.ui.screen = "game";
+    document.body.dataset.screen = "game";
+    updateValidBadge();
+    render();
+  }
+
+  function currentNode(){
+    return App.path.nodes[App.run.nodeId];
+  }
+  function isEndingNode(node){ return !!(node && node.ending); }
+
+  function snapshot(){
+    return {
+      nodeId: App.run.nodeId, hearts: App.run.hearts, consequence: App.run.consequence,
+      endingReason: App.run.endingReason, revealShown: App.run.revealShown
+    };
+  }
+
+  function choose(index){
+    var node = currentNode();
+    if (!node || isEndingNode(node) || !Array.isArray(node.choices)) return;
+    var c = node.choices[index];
+    if (!c) return;
+
+    App.run.history.push(snapshot());
+    App.run.consequence = c.consequence || null;
+    App.run.revealShown = false;
+
+    if (c.fatal) {
+      App.run.lastDelta = 0;
+      App.run.nodeId = hasOwn(App.path.nodes, c.next) ? c.next : App.run.nodeId;
+      App.run.endingReason = "fatal";
+    } else {
+      var delta = hasOwn(c,"heartsDelta") ? c.heartsDelta : 0;
+      var before = App.run.hearts;
+      App.run.hearts = clamp(before + delta, 0, App.path.maxHearts);
+      App.run.lastDelta = App.run.hearts - before; // post-clamp
+      if (App.run.hearts <= 0) {
+        App.run.nodeId = App.path.heartsDepletedNode; // overrides c.next, per GAME_DESIGN.md §3
+        App.run.endingReason = "hearts";
+      } else {
+        App.run.nodeId = hasOwn(App.path.nodes, c.next) ? c.next : App.run.nodeId;
+        App.run.endingReason = isEndingNode(App.path.nodes[App.run.nodeId]) ? "node" : null;
+      }
+    }
+    render();
+  }
+
+  function stepBack(){
+    if (!App.run.history.length) return;
+    var snap = App.run.history.pop();
+    App.run.nodeId = snap.nodeId;
+    App.run.hearts = snap.hearts;
+    App.run.consequence = snap.consequence;
+    App.run.endingReason = snap.endingReason;
+    App.run.revealShown = snap.revealShown;
+    App.run.lastDelta = 0;
+    render();
+  }
+
+  function restart(){
+    if (!App.path) return;
+    startGame(App.path);
+  }
+
+  // ---------------------------------------------------------------
+  // Rendering
+  // ---------------------------------------------------------------
+  function setParagraphs(el, text){
+    el.innerHTML = "";
+    String(text||"").split("\n").filter(function(l){return l.trim();}).forEach(function(line){
+      var p = document.createElement("p");
+      p.textContent = line;
+      el.appendChild(p);
+    });
+    if (!el.childElementCount) el.textContent = "";
+  }
+
+  function renderHearts(){
+    var max = App.path.maxHearts, h = App.run.hearts;
+    var s = "";
+    for (var i=0;i<max;i++) s += (i < h) ? "♥" : "♡";
+    var el = document.getElementById("hearts");
+    el.textContent = s;
+    if (App.run.lastDelta !== 0) {
+      el.classList.remove("pulse"); void el.offsetWidth; el.classList.add("pulse");
+    }
+  }
+
+  function render(){
+    if (App.ui.caps) document.body.classList.add("caps"); else document.body.classList.remove("caps");
+    if (App.ui.screen !== "game") return;
+    var node = currentNode();
+    var device = document.getElementById("device");
+    var ending = isEndingNode(node);
+
+    document.getElementById("hudTitle").textContent = App.path.title + (App.path.era ? " — " + App.path.era : "");
+    renderHearts();
+
+    var consEl = document.getElementById("consequence");
+    if (App.run.consequence) { consEl.style.display = "block"; consEl.textContent = App.run.consequence; }
+    else { consEl.style.display = "none"; consEl.textContent = ""; }
+
+    setParagraphs(document.getElementById("nodeText"), node.text);
+
+    var actions = document.getElementById("actions");
+    var footer = document.getElementById("endingFooter");
+    var badge = document.getElementById("endingBadge");
+    var revealWrap = document.getElementById("revealWrap");
+    var revealText = document.getElementById("revealText");
+
+    if (!ending) {
+      device.removeAttribute("data-ending");
+      badge.style.display = "none";
+      revealWrap.style.display = "none";
+      footer.style.display = "none";
+      actions.style.display = "grid";
+      actions.innerHTML = "";
+      node.choices.forEach(function(c, idx){
+        var btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.textContent = c.text;
+        btn.addEventListener("click", function(){ choose(idx); });
+        actions.appendChild(btn);
+      });
+    } else {
+      actions.style.display = "none";
+      actions.innerHTML = "";
+      device.setAttribute("data-ending", node.endingType || "neutral");
+      badge.style.display = "inline-block";
+      badge.textContent = node.endingType || "ending";
+
+      if (node.twist === true) {
+        revealWrap.style.display = "block";
+        revealText.textContent = node.revealedIdentity || "";
+        var btn = document.getElementById("revealBtn");
+        btn.style.display = App.run.revealShown ? "none" : "inline-block";
+        revealText.classList.toggle("shown", App.run.revealShown);
+        btn.onclick = function(){ App.run.revealShown = true; render(); };
+      } else {
+        revealWrap.style.display = "none";
+      }
+
+      footer.style.display = "flex";
+      footer.innerHTML = "";
+      var restartBtn = document.createElement("button");
+      restartBtn.textContent = "Play again";
+      restartBtn.addEventListener("click", restart);
+      footer.appendChild(restartBtn);
+      var backBtn = document.createElement("button");
+      backBtn.textContent = "Step back";
+      backBtn.disabled = !App.run.history.length;
+      backBtn.addEventListener("click", stepBack);
+      footer.appendChild(backBtn);
+    }
+
+    updateChromeButtons();
+  }
+
+  function updateValidBadge(){
+    var b = document.getElementById("validBadge");
+    var errs = App.report.errors.length, warns = App.report.warnings.length;
+    if (errs > 0) { b.innerHTML = ""; var s=document.createElement("span"); s.className="badge err"; s.textContent = errs + " error" + (errs===1?"":"s"); s.title="Open report"; s.addEventListener("click",showReport); b.appendChild(s); }
+    else if (warns > 0) { b.innerHTML = ""; var s2=document.createElement("span"); s2.className="badge warn"; s2.textContent = warns + " warning" + (warns===1?"":"s"); s2.title="Open report"; s2.addEventListener("click",showReport); b.appendChild(s2); }
+    else { b.innerHTML = ""; var s3=document.createElement("span"); s3.className="badge ok"; s3.textContent = "valid"; s3.title="Open report"; s3.addEventListener("click",showReport); b.appendChild(s3); }
+  }
+
+  function updateChromeButtons(){
+    document.getElementById("btnStepBack").disabled = App.ui.screen !== "game" || !App.run.history.length;
+    document.getElementById("btnRestart").disabled = App.ui.screen !== "game";
+  }
+
+  // ---------------------------------------------------------------
+  // Chrome controls
+  // ---------------------------------------------------------------
+  document.getElementById("btnStepBack").addEventListener("click", stepBack);
+  document.getElementById("btnRestart").addEventListener("click", restart);
+  document.getElementById("btnCaps").addEventListener("click", function(){
+    App.ui.caps = !App.ui.caps;
+    lsSet("caps", App.ui.caps ? "1" : "0");
+    render();
+  });
+  document.getElementById("btnReload").addEventListener("click", showLoader);
+
+  document.addEventListener("keydown", function(e){
+    var tag = (e.target && e.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea") return;
+    if (App.ui.screen !== "game") return;
+    var node = currentNode();
+    if (!node) return;
+    if (!isEndingNode(node)) {
+      if (e.key === "1") choose(0);
+      if (e.key === "2") choose(1);
+    }
+    if (e.key === "Backspace") { e.preventDefault(); stepBack(); }
+    if (e.key.toLowerCase() === "r") restart();
+  });
+
+  // ---------------------------------------------------------------
+  // Boot
+  // ---------------------------------------------------------------
+  wireLoader();
+  initLoad();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+{
+  "$schema": "../path.schema.json",
+  "id": "varangian_guard",
+  "title": "The Emperor's Axe",
+  "era": "Constantinople, Byzantine Empire, 1034-1042",
+  "contentWarnings": ["depicted violence", "public flogging", "civil unrest"],
+  "character": {
+    "name": "Nordbrikt",
+    "archetype": "ambitious",
+    "role": "Recruit in the Emperor's Varangian Guard",
+    "bio": "You sailed across half the known world to sell your sword to an empire that still remembers your father's enemies. What you call yourself now is entirely up to you.",
+    "trueIdentity": "Harald Sigurdsson, later King Harald III 'Hardrada' of Norway — serving in the Varangian Guard under a concealed identity after his exile following the Battle of Stiklestad, 1030."
+  },
+  "startingHearts": 5,
+  "maxHearts": 5,
+  "startNode": "n_harbor",
+  "heartsDepletedNode": "end_fever",
+  "nodes": {
+    "n_harbor": {
+      "text": "CONGRATULATIONS. You survived the crossing. A clerk with a wax tablet is about to decide your whole future in one word.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Give your father's name", "next": "n_second_look", "heartsDelta": -1, "consequence": "The clerk's pen stops. He knows that name. Not fondly." },
+        { "id": "b", "text": "Call yourself Nordbrikt", "next": "n_oath_hall", "consequence": "He writes it down without looking up. Nobody cares who you are yet." }
+      ]
+    },
+    "n_second_look": {
+      "text": "A second clerk checks your name against a list of powerful men's enemies. His eyebrows go up. Eyebrows going up is never good.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Let them think you're valuable", "next": "end_dungeon", "consequence": "He smiles. First time all day. Somehow that's worse." },
+        { "id": "b", "text": "Insist you're nobody worth watching", "next": "n_oath_hall", "heartsDelta": -1, "consequence": "He believes you. It costs a few bruises to sell it." }
+      ]
+    },
+    "n_oath_hall": {
+      "text": "Three hundred foreign swordsmen kneel in a hall built for a god nobody prays to anymore. An officer asks who swears the oath first.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Step forward first", "next": "n_first_posting", "consequence": "You step up. The officer notices you. So does everyone else." },
+        { "id": "b", "text": "Wait and go last", "next": "n_first_posting", "consequence": "Someone else goes first. Nobody remembers your face. Fine by you." }
+      ]
+    },
+    "n_first_posting": {
+      "text": "Two jobs are open. Sail to Sicily and fight rebels. Or stand at the palace gate for six hours, pretending to be furniture.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Sail for Sicily", "next": "n_sicily_1" },
+        { "id": "b", "text": "Take the harbor gate", "next": "n_palace_1" }
+      ]
+    },
+    "n_sicily_1": {
+      "text": "Your commander, George Maniakes, trusts nobody and is almost always right about it. A town surrenders before the siege towers even roll out.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Take your fair share", "next": "n_sicily_2", "consequence": "The other men call you a coward for not grabbing more." },
+        { "id": "b", "text": "Take more than your share", "next": "n_sicily_2", "heartsDelta": -1, "consequence": "Maniakes has you flogged in front of everyone. On principle." }
+      ]
+    },
+    "n_sicily_2": {
+      "text": "The paymaster gets caught stealing wages. He offers you a cut to stay quiet. Teamwork, apparently.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Take the cut", "next": "n_sicily_3", "heartsDelta": -1, "consequence": "Funny how your pay never comes up short again. Everyone notices that too." },
+        { "id": "b", "text": "Report him", "next": "n_sicily_3", "heartsDelta": -1, "consequence": "He vanishes by morning. So does your popularity, for a while." }
+      ]
+    },
+    "n_sicily_3": {
+      "text": "A column marches inland to break a siege at a town nobody can pronounce. Everyone agrees: excellent ambush country.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Stay with the column", "next": "n_michael_death", "consequence": "Nothing finds you. Some days that's the whole job." },
+        { "id": "b", "text": "Scout the ridge alone", "next": "end_sicily", "fatal": true, "consequence": "You go looking for trouble. Trouble was already looking for you." }
+      ]
+    },
+    "n_palace_1": {
+      "text": "Gate duty means watching rich people walk by all day. No sitting down. In month three, Empress Zoe's litter actually stops in front of you.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Meet her eyes", "next": "n_palace_2", "consequence": "She asks your name. You give her the only one anyone here has heard." },
+        { "id": "b", "text": "Keep your eyes ahead", "next": "n_palace_2", "consequence": "She moves on without a word. Riveting shift." }
+      ]
+    },
+    "n_palace_2": {
+      "text": "A chamberlain corners you with a job. Deliver a letter the Empress really does not want traced back to her.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Carry the letter", "next": "n_michael_death", "heartsDelta": -1, "consequence": "The man who reads it goes pale. Congratulations, you're in on a secret now." },
+        { "id": "b", "text": "Refuse politely", "next": "n_michael_death", "consequence": "Turning down an empress is its own kind of risky, it turns out." }
+      ]
+    },
+    "n_michael_death": {
+      "text": "Emperor Michael IV dies quietly, as a monk, having hidden his illness for years. Tradition gives the Guard one night to loot the treasury before the new reign locks it up.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Fill your cloak like everyone else", "next": "n_five_years", "consequence": "You grab your share. Nobody will remember you for it." },
+        { "id": "b", "text": "Take nothing at all", "next": "n_five_years", "heartsDelta": 1, "consequence": "You take nothing. The new bosses notice the one honest guardsman." }
+      ]
+    },
+    "n_five_years": {
+      "text": "Years pass. Mostly drills. Mostly boredom. Then the new emperor decides the empress who adopted him is a problem.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Report to your post as ordered", "next": "n_coup_gate", "consequence": "Orders: hold the inner gate. Nobody explains why. Classic." },
+        { "id": "b", "text": "Ask the crowd what's happening", "next": "n_coup_gate", "heartsDelta": -1, "consequence": "You get caught out of formation and smacked for it. Worth it — now you know what's coming." }
+      ]
+    },
+    "n_coup_gate": {
+      "text": "The mob already dealt with the emperor's uncle. It was not a gentle conversation. Now they want the emperor himself. Your unit is told to hold the inner gate. No further instructions provided.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Hold the gate", "next": "n_coup_2", "heartsDelta": -1, "consequence": "You hold it for exactly as long as it takes to get hurt holding it." },
+        { "id": "b", "text": "Let the gate go", "next": "n_coup_2", "consequence": "You let the crowd through. Nobody blames you. Crowds are hard to argue with." }
+      ]
+    },
+    "n_coup_2": {
+      "text": "Somebody hands you an iron bar and points at the room where the former emperor is hiding. He is having a very bad day. It is about to get worse.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Finish it yourself", "next": "n_backpay", "consequence": "You're briefly the most talked-about man in the city. Fame is complicated." },
+        { "id": "b", "text": "Let someone else finish it", "next": "n_backpay", "consequence": "You stand at the door instead. Fewer people learn your name. Also fine." }
+      ]
+    },
+    "n_backpay": {
+      "text": "The new government owes the Guard eight months of pay. It is in no rush to find it. You have enough coin to leave — except nobody will actually let you go.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Wait for proper leave", "next": "end_anonymous", "consequence": "You file the paperwork. Paperwork can eat the rest of your life." },
+        { "id": "b", "text": "Leave without asking", "next": "n_chain_break", "consequence": "Two borrowed ships, at night. Not a plan the office would approve." }
+      ]
+    },
+    "n_chain_break": {
+      "text": "A giant iron chain blocks the harbor exit. It has sunk faster ships than yours. It does not accept apologies.",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Move every man to the stern", "next": "end_king", "consequence": "The ship's front end lifts. For one long moment, you are basically flying." },
+        { "id": "b", "text": "Keep the rowers at the oars", "next": "end_chain", "consequence": "The chain does not move. The ship, unfortunately, does. Very suddenly." }
+      ]
+    },
+    "end_dungeon": {
+      "text": "They decide you are too interesting to let go. Fed well, paid rarely, watched forever — a hostage with a very nice belt. You never wear the Guard's colors again. You never really leave the palace either.",
+      "ending": true,
+      "endingType": "bad"
+    },
+    "end_sicily": {
+      "text": "The wolves get to you before anyone else does. Your name goes on a list of brave men. That's what they call you when the brave thing didn't work.",
+      "ending": true,
+      "endingType": "death"
+    },
+    "end_anonymous": {
+      "text": "Your leave never quite comes through. Somehow you stop minding. Promoted twice more, a nice house, old and comfortable. One day you hear Norway has crowned a new king. It is not you.",
+      "ending": true,
+      "endingType": "bad",
+      "twist": true,
+      "revealedIdentity": "Surprise: you were Harald Sigurdsson, heir to the Norwegian throne. This version of you just never went home to collect it."
+    },
+    "end_king": {
+      "text": "The ship lifts, clears the chain, and the water ahead is wide open. Home through rivers, forests, and one brutal winter — crowned king of a country that had almost forgotten your name.",
+      "ending": true,
+      "endingType": "good",
+      "twist": true,
+      "revealedIdentity": "Surprise: you were Harald Sigurdsson. History calls you Harald Hardrada, King of Norway — and you're about to spend the next twenty years defending that title."
+    },
+    "end_chain": {
+      "text": "The chain does not budge. Your ship does, all at once, and not in one piece. The harbor is very cold in October.",
+      "ending": true,
+      "endingType": "death"
+    },
+    "end_fever": {
+      "text": "Not a battle. Not a blade. Just a wound that would not close and a fever that would not quit — a barracks that has seen this exact ending a hundred times before.",
+      "ending": true,
+      "endingType": "death"
+    }
+  }
+}
