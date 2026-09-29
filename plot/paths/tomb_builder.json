@@ -1,0 +1,257 @@
+{
+  "$schema": "../path.schema.json",
+  "id": "tomb_builder",
+  "title": "Born by the Nile",
+  "era": "Deir el-Medina, Egypt, 1185 BC",
+  "cover": "cover",
+  "contentWarnings": ["cartoon violence", "death", "beatings"],
+  "character": {
+    "name": "Meri",
+    "archetype": "playful",
+    "role": "Son of a royal tomb builder",
+    "bio": "Your village has one job: dig tombs for dead kings. It is steady work. Kings keep dying."
+  },
+  "startingHearts": 5,
+  "maxHearts": 5,
+  "startNode": "n_born",
+  "heartsDepletedNode": "end_weighing",
+  "nodes": {
+    "n_born": {
+      "text": "CONGRATULATIONS! You are born in Egypt, 1185 BC.\nYour father builds tombs for the Pharaoh. Business is always good.\nThe midwife holds you up. You...",
+      "age": 0,
+      "image": "house",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Scream like a goose", "next": "n_charm", "consequence": "Loud baby, healthy baby. The midwife is happy. The neighbors are not." },
+        { "id": "b", "text": "Stay very quiet", "next": "n_charm", "heartsDelta": -1, "consequence": "The midwife thinks you are dead. She checks with a cup of cold Nile water." }
+      ]
+    },
+    "n_charm": {
+      "text": "Demons love to eat babies. Everyone knows this.\nYour mother buys you a magic charm. Which one do you grab?",
+      "age": 1,
+      "image": "house",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "The ugly god Bes", "next": "n_nile", "consequence": "Bes is so ugly that demons laugh and run away. It works." },
+        { "id": "b", "text": "The Eye of Horus", "next": "n_nile", "consequence": "The Eye watches you all day. That is a lot of pressure for a baby." }
+      ]
+    },
+    "n_nile": {
+      "text": "Age five. You can walk, talk and steal dates.\nAt the river, a log swims toward you. Logs do not usually swim.",
+      "age": 5,
+      "image": "nile",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Run home screaming", "next": "n_fork", "consequence": "Nobody believes you. Then the log eats a goose. Now everybody believes you." },
+        { "id": "b", "text": "Stand still and watch", "next": "n_fork", "heartsDelta": -1, "consequence": "The log has teeth. You now have nine toes. Nine is still a lot." }
+      ]
+    },
+    "n_fork": {
+      "text": "Age seven. Time to be useful.\nYour father says: learn to write at the scribe school, or carry water down into the Pharaoh's tomb.",
+      "age": 7,
+      "image": "village",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Go to school", "next": "n_school1" },
+        { "id": "b", "text": "Carry the water", "next": "n_tomb1" }
+      ]
+    },
+    "n_school1": {
+      "text": "At school you copy old words onto broken pots. All day. Every day.\nThe teacher says: \"A boy's ear is on his back. He listens when he is beaten.\"",
+      "age": 9,
+      "image": "school",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Copy every sign carefully", "next": "n_school2", "heartsDelta": -1, "consequence": "Too slow. The teacher checks if your ear is really on your back. It is." },
+        { "id": "b", "text": "Draw the teacher's face", "next": "n_school2", "consequence": "He is angry. Then he sees how handsome you made him. He keeps it." }
+      ]
+    },
+    "n_school2": {
+      "text": "Your friend Hori hides a jar of beer under his seat.\n\"Scribes must relax,\" he says. You are twelve.",
+      "age": 12,
+      "image": "school",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Drink with Hori", "next": "n_hippo", "consequence": "Egyptian beer is thick like soup. You sleep through class. Like a real scribe." },
+        { "id": "b", "text": "Tell the teacher", "next": "n_hippo", "consequence": "The teacher drinks the beer himself. Then he beats you both, to be fair." }
+      ]
+    },
+    "n_tomb1": {
+      "text": "The King's tomb is deep, dark and very hot.\nA scribe counts every lamp wick the workers use.\nHalfway down, your wick burns out.",
+      "age": 9,
+      "image": "tomb",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Take Hori's wick", "next": "n_tomb2", "consequence": "Now Hori works in the dark. He is not happy. He will remember this." },
+        { "id": "b", "text": "Feel your way back", "next": "n_tomb2", "heartsDelta": -1, "consequence": "You find the wall. With your face. Twice." }
+      ]
+    },
+    "n_tomb2": {
+      "text": "A snake sleeps in the King's burial room.\nThe old workers say snakes guard the dead. The young workers say snakes bite.",
+      "age": 12,
+      "image": "tomb",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Hit it with a hammer", "next": "n_hippo", "consequence": "You miss the snake. You hit a painted god. The painters want to hit you back." },
+        { "id": "b", "text": "Call the scorpion doctor", "next": "n_hippo", "consequence": "He says magic words and hits it with a shovel. Mostly the shovel." }
+      ]
+    },
+    "n_hippo": {
+      "text": "Age fifteen. Summer. The Nile floods the fields and nobody has work.\nThe boys go to the river. A hippo is sleeping in the water.",
+      "age": 15,
+      "image": "nile",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Ride the hippo", "next": "end_hippo", "fatal": true, "consequence": "Hori bets you a sandal that you can't. You can. For about two seconds." },
+        { "id": "b", "text": "Swim across the river", "next": "n_love", "consequence": "You make it. A crocodile watches you the whole way. Taking notes." }
+      ]
+    },
+    "n_love": {
+      "text": "You love Tiy, the potter's daughter.\nIn Egypt, marriage is easy: you just move into one house.\nThe hard part is her mother.",
+      "age": 18,
+      "image": "wedding",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Bring her mother a goose", "next": "n_wages", "heartsDelta": -1, "consequence": "Her mother hates geese. She hits you with it. The goose also hits you." },
+        { "id": "b", "text": "Just carry your bed over", "next": "n_wages", "heartsDelta": 1, "consequence": "Her mother sighs a very long sigh. You are married. Tiy laughs at all your jokes." }
+      ]
+    },
+    "n_wages": {
+      "text": "Year 29 of King Ramesses III. You are paid in grain and beer.\nFor two months, nothing came.\nThe scribe Amennakht says: \"We stop working. Today.\"",
+      "age": 28,
+      "image": "village",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Put down your tools", "next": "n_strike" },
+        { "id": "b", "text": "Go to work anyway", "next": "n_loyal" }
+      ]
+    },
+    "n_strike": {
+      "text": "The workers walk out and sit behind a temple.\nIt is the first strike in history. Nobody knows the rules yet. Including you.",
+      "age": 28,
+      "image": "strike",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Shout \"We are hungry!\"", "next": "n_vizier", "consequence": "Everyone shouts it. The priests bring bread just to make it stop." },
+        { "id": "b", "text": "Sit quietly and wait", "next": "n_vizier", "heartsDelta": -1, "consequence": "You sit in the sun for three days. You get very hungry. And very red." }
+      ]
+    },
+    "n_loyal": {
+      "text": "You go to work alone. The whole valley is empty.\nThe tomb is quiet. And dark. And you are very hungry.",
+      "age": 28,
+      "image": "tomb",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Keep cutting stone", "next": "n_vizier", "heartsDelta": -1, "consequence": "You faint and wake up in the dark. You say sorry to every god you know." },
+        { "id": "b", "text": "Take a long nap", "next": "n_vizier", "consequence": "Nobody pays you to sleep. Nobody pays you to work either. Fair." }
+      ]
+    },
+    "n_vizier": {
+      "text": "Vizier To arrives. After the Pharaoh, he is the most powerful man in Egypt.\nHe points at you. \"You. Why is nobody working?\"",
+      "age": 28,
+      "image": "strike",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Speak for all workers", "next": "n_donkey", "heartsDelta": -1, "consequence": "He sends the grain. He also sends two guards to remember your face. With sticks." },
+        { "id": "b", "text": "Point at Amennakht", "next": "n_donkey", "consequence": "The Vizier shouts at Amennakht instead. The grain comes. Amennakht never forgets." }
+      ]
+    },
+    "n_donkey": {
+      "text": "You rent your neighbor's donkey. The donkey dies.\nYour neighbor wants a new donkey. You want a better neighbor.",
+      "age": 32,
+      "image": "village",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Go to the village court", "next": "n_robbers", "consequence": "The court talks about your donkey for eleven years. You win. The donkey is still dead." },
+        { "id": "b", "text": "Pay him in beer", "next": "n_robbers", "consequence": "Forty jars of beer. He stays drunk until the next flood. Everyone is happy." }
+      ]
+    },
+    "n_robbers": {
+      "text": "Hori visits you at night. He has new gold rings. Workers do not have gold rings.\n\"The old kings have so much gold,\" he says. \"And they don't use it.\"",
+      "age": 36,
+      "image": "robbers",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Go with Hori", "next": "n_robbery" },
+        { "id": "b", "text": "Close the door", "next": "n_court" }
+      ]
+    },
+    "n_robbery": {
+      "text": "Inside the old tomb, the gold shines in your lamp.\nOutside, another lamp is coming. It belongs to a guard.",
+      "age": 36,
+      "image": "robbers",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Hide inside the coffin", "next": "n_old", "heartsDelta": -2, "consequence": "You spend the night with a dead king. He is a quiet neighbor. You are never the same." },
+        { "id": "b", "text": "Grab the gold and run", "next": "end_quarry", "consequence": "You run fast. But gold is heavy, and the guards are not carrying any." }
+      ]
+    },
+    "n_court": {
+      "text": "A month later, the tomb robbers are caught. The judges want more names.\nHori looks at you from across the court.",
+      "age": 36,
+      "image": "court",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Tell them about Hori", "next": "n_old", "consequence": "Hori goes to the stone quarries. You never have to share a wick with him again." },
+        { "id": "b", "text": "Say you know nothing", "next": "n_old", "heartsDelta": -1, "consequence": "The judges check your story the normal way: with a stick, on your feet." }
+      ]
+    },
+    "n_old": {
+      "text": "You are fifty. In Egypt, that is very old. Your knees agree.\nThe chief of the workers dies. The village needs a new one.",
+      "age": 50,
+      "image": "village",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Take the job", "next": "n_chief" },
+        { "id": "b", "text": "Let a young man lead", "next": "end_quiet", "consequence": "You go home, sit in the shade and complain. You are very good at it." }
+      ]
+    },
+    "n_chief": {
+      "text": "You are chief now. The new king wants his tomb, fast.\nThen your men dig into a wall... and break into another king's tomb. Oops.",
+      "age": 51,
+      "image": "tomb",
+      "ending": false,
+      "choices": [
+        { "id": "a", "text": "Keep digging straight", "next": "end_quiet", "heartsDelta": -2, "consequence": "The ceiling falls. Two kings, one pile of rocks. They give your job to someone else." },
+        { "id": "b", "text": "Turn the tunnel sideways", "next": "end_foreman", "consequence": "The tunnel bends. Nobody notices. 3,000 years later, tourists will." }
+      ]
+    },
+    "end_foreman": {
+      "text": "You die at sixty-two: rich, fat and respected. Your tomb shows you drinking beer forever.\nYour heart is weighed against a feather. It is lighter. Welcome to paradise.\n3,000 years later, scholars find your laundry list. They are very excited.",
+      "title": "Chief of the Tomb Builders",
+      "age": 62,
+      "image": "paradise",
+      "ending": true,
+      "endingType": "good"
+    },
+    "end_quiet": {
+      "text": "You live a long, quiet life and die in your sleep at fifty-eight.\nNobody paints your tomb. Only one broken pot with your name survives.\nIt says: \"My donkey is lazy.\"",
+      "title": "The Lazy Donkey Letter",
+      "age": 58,
+      "image": "pot",
+      "ending": true,
+      "endingType": "neutral"
+    },
+    "end_quarry": {
+      "text": "The guards catch you with a king's golden cup in your hand.\nThe judges send you to the stone quarries for life.\nYou cut stone again. This time, nobody counts your wicks.",
+      "title": "Sent to the Quarries",
+      "image": "quarry",
+      "ending": true,
+      "endingType": "bad"
+    },
+    "end_hippo": {
+      "text": "Hippos kill more people than crocodiles do. You helped keep it that way.\nYou won the sandal. You will not need it.",
+      "title": "The Hippo Rider",
+      "image": "hippo",
+      "ending": true,
+      "endingType": "death"
+    },
+    "end_weighing": {
+      "text": "Life was hard on you. In the end, it wins.\nIn the afterlife, your heart is weighed against a feather. The feather wins.\nAmmit, the crocodile-headed monster, eats your heart. Busy day for her.",
+      "title": "Eaten by Ammit",
+      "image": "weighing",
+      "ending": true,
+      "endingType": "death"
+    }
+  }
+}
