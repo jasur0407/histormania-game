@@ -1,0 +1,44 @@
+/* Optional custom CSS for the itch.io profile and game pages (only once itch.io support has enabled
+   CSS for your account). Every rule is scoped to #wrapper, as the itch.io CSS guide requires.
+   itch.io's own class names can change: if a rule has no effect, right-click the element ->
+   Inspect, and adjust the selector. */
+
+/* Game cards in the profile grid: the game's thick outline + hard shadow, lifting on hover. */
+#wrapper .game_cell {
+  background: #f3e8d0;
+  border: 3px solid #2b2118;
+  border-radius: 14px;
+  box-shadow: 0 5px 0 #2b2118;
+  overflow: hidden;
+  transition: transform .1s ease, box-shadow .1s ease;
+}
+#wrapper .game_cell:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 9px 0 #2b2118;
+}
+#wrapper .game_cell .game_title a,
+#wrapper .game_cell .game_text {
+  color: #2b2118;
+}
+#wrapper .game_cell .game_thumb {
+  border-bottom: 3px solid #2b2118;
+}
+
+/* Buttons: the same chunky press as in the game. */
+#wrapper .button {
+  border: 3px solid #2b2118;
+  border-radius: 12px;
+  box-shadow: 0 4px 0 #2b2118;
+  font-weight: 800;
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+#wrapper .button:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #2b2118; }
+#wrapper .button:active { transform: translateY(4px); box-shadow: 0 0 0 #2b2118; }
+
+/* About section: headers get a gold underline, like a game menu. */
+#wrapper .user_profile h2 {
+  padding-bottom: 6px;
+  border-bottom: 3px solid #e3aa3e;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
